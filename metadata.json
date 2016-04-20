@@ -1,0 +1,14 @@
+{
+  "name": "lorissantamaria/ipaclient",
+  "version": "0.5.0",
+  "author": "Loris Santamaria <loris@lgs.com.ve>",
+  "summary": "Manages SSSD and ldap.conf in a FreeIPA client machine",
+  "license": "GPL-2.0",
+  "source": "",
+  "project_page": null,
+  "issues_url": null,
+  "dependencies": [
+    {"name":"puppetlabs-stdlib","version_requirement":">= 1.0.0"}
+  ]
+}
+
