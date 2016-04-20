@@ -10,8 +10,8 @@
 #
 ####################################################################
 
-BASE <%= @suffix %>
-URI <% @ldapservers.each do |val| -%> ldap://<%= val %>:389/ <% end -%>
+BASE <%= scope.lookupvar('ipaclient::suffix') %>
+URI <% scope.lookupvar('ipaclient::ldapservers').each do |val| -%> ldap://<%= val %>:389/ <% end -%>
 
 TLS_CACERT	/etc/ipa/ca.crt
 

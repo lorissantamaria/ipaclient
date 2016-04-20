@@ -4,11 +4,11 @@
  admin_server = FILE:/var/log/kadmind.log
 
 [libdefaults]
- default_realm = <%= @realm %>
-<% if @lsbmajdistrelease == "5" or @lsbmajdistrelease == "6" -%>
+ default_realm = <%= scope.lookupvar('ipaclient::realm') %>
+<% if scope.lookupvar('ipaclient::lsbmajdistrelease') == "5" or scope.lookupvar('ipaclient::lsbmajdistrelease') == "6" -%>
  dns_lookup_realm = true
 <% else -%>
- <%- if @is_ipa_server != "no" -%>
+ <%- if scope.lookupvar('ipaclient::is_ipa_server') != "no" -%>
  realm_try_domains = false
  <%- else -%>
  realm_try_domains = true
@@ -19,40 +19,40 @@
  rdns = false
  ticket_lifetime = 24h
  forwardable = yes
-<% if @lsbmajdistrelease != "5" -%>
+<% if scope.lookupvar('ipaclient::lsbmajdistrelease') != "5" -%>
  allow_weak_crypto = true
 <% end -%>
 
 [realms]
- <%= @realm %> = {
-  default_domain = <%= @domain %>
-<% if @is_ipa_server != "no" -%>
-  admin_server = <%= @fqdn %>
-  kdc = <%= @fqdn %>
-  master_kdc = <%= @fqdn %>
+ <%= scope.lookupvar('ipaclient::realm') %> = {
+  default_domain = <%= scope.lookupvar('ipaclient::domain') %>
+<% if scope.lookupvar('ipaclient::is_ipa_server') != "no" -%>
+  admin_server = <%= scope.lookupvar('ipaclient::fqdn') %>
+  kdc = <%= scope.lookupvar('ipaclient::fqdn') %>
+  master_kdc = <%= scope.lookupvar('ipaclient::fqdn') %>
 <% end -%>
   pkinit_anchors = FILE:/etc/ipa/ca.crt
-  auth_to_local = RULE:[1:$1@$0](^.*@<%= @trustedrealm %>$)s/@<%= @trustedrealm %>/@<%= @trusteddomain %>/
+  auth_to_local = RULE:[1:$1@$0](^.*@<%= scope.lookupvar('ipaclient::trustedrealm') %>$)s/@<%= scope.lookupvar('ipaclient::trustedrealm') %>/@<%= scope.lookupvar('ipaclient::trusteddomain') %>/
   auth_to_local = DEFAULT
 }
 
-<% if @trustedrealm != "AD.REALM.COM" -%>
- <%= @trustedrealm %> = {
-  default_domain = <%= @trusteddomain %>
+<% if scope.lookupvar('ipaclient::trustedrealm') != "AD.REALM.COM" -%>
+ <%= scope.lookupvar('ipaclient::trustedrealm') %> = {
+  default_domain = <%= scope.lookupvar('ipaclient::trusteddomain') %>
 }
 <% end -%>
 
 [domain_realm]
- .<%= @domain %> = <%= @realm %>
- <%= @domain %> = <%= @realm %>
-<% if @trustedrealm != "AD.REALM.COM" -%>
- .<%= @trusteddomain %> = <%= @trustedrealm %>
- <%= @trusteddomain %> = <%= @trustedrealm %>
+ .<%= scope.lookupvar('ipaclient::domain') %> = <%= scope.lookupvar('ipaclient::realm') %>
+ <%= scope.lookupvar('ipaclient::domain') %> = <%= scope.lookupvar('ipaclient::realm') %>
+<% if scope.lookupvar('ipaclient::trustedrealm') != "AD.REALM.COM" -%>
+ .<%= scope.lookupvar('ipaclient::trusteddomain') %> = <%= scope.lookupvar('ipaclient::trustedrealm') %>
+ <%= scope.lookupvar('ipaclient::trusteddomain') %> = <%= scope.lookupvar('ipaclient::trustedrealm') %>
 <% end -%>
 
-<% if @is_ipa_server != "no" -%>
+<% if scope.lookupvar('ipaclient::is_ipa_server') != "no" -%>
 [dbmodules]
-  <%= @realm %> = {
+  <%= scope.lookupvar('ipaclient::realm') %> = {
     db_library = ipadb.so
   }
 <% end -%>

@@ -1,48 +1,134 @@
-# Class: freeipaclient
+# Class: ipaclient
 # ===========================
 #
-# Full description of class freeipaclient here.
+# Full description of class ipaclient here.
 #
 # Parameters
 # ----------
 #
-# Document parameters here.
+# [*realm*]
+#   String. Name of your FreeIPA realm
+#   Default: REALM.COM
 #
-# * `sample parameter`
-# Explanation of what this parameter affects and what it defaults to.
-# e.g. "Specify one or more upstream ntp servers as an array."
+# [*domain*]
+#  String.  DNS Domain to service by SSSD
+#  Default: dnsdomain.com
 #
-# Variables
-# ----------
+# [*trustedrealm*]
+#   String. Optional, name of a trusted AD realm
+#   Default: AD.REALM.COM
 #
-# Here you should define a list of variables that this module would require.
+# [*trusteddomain*]
+#  String.  Optional, name of a trusted AD DNS Domain
+#  Default: ad.dnsdomain.com
 #
-# * `sample variable`
-#  Explanation of how this variable affects the function of this class and if
-#  it has a default. e.g. "The parameter enc_ntp_servers must be set by the
-#  External Node Classifier as a comma separated list of hostnames." (Note,
-#  global variables should be avoided in favor of class parameters as
-#  of Puppet 2.6.)
+# [*suffix*]
+#   String.  LDAP base to search for LDAP results in
+#   Default: dc=example,dc=org
+#
+# [*ldapservers*]
+#   String.  LDAP servers to connect to for results.  Comma separated list of hosts.
+#   Default: myldapserver.dnsdomain.com
+#
+# [*sudobindpw*]
+#   String.  Password for libnss to connect to ldap server as
+#   uid=sudo,cn=sysaccounts,cn=etc,$suffix. Required on CentOS 5
+#   Default: true
+#
+# [*is_ipa_server*]
+#   Boolean.  Set to true when SSSD is running on an IPA server
+#   Default: false
+#
+# [*k5loginusers*]
+#   String. List of principals authorized to login as root on the host
+#   Default: admin@REALM.COM
 #
 # Examples
 # --------
 #
 # @example
-#    class { 'freeipaclient':
-#      servers => [ 'pool.ntp.org', 'ntp.local.company.com' ],
+#    class { 'ipaclient':
+#        realm        => 'MYREALM.COM',
+#        ldapservers  => ['ldap1.mycompany.com, 'ldap2.mycompany.com'],
 #    }
 #
 # Authors
 # -------
 #
-# Author Name <author@domain.com>
+# Loris Santamaria <loris@lgs.com.ve>
 #
 # Copyright
 # ---------
 #
-# Copyright 2016 Your name here, unless otherwise noted.
+# Copyright 2016 Loris Santamaria.
 #
-class freeipaclient {
-
-
+class ipaclient (
+	$realm          = "REALM.COM",
+	$domain         = "dnsdomain.com",
+	$trustedrealm   = "AD.REALM.COM",
+	$trusteddomain  = "ad.dnsdomain.com",
+	$k5loginusers   = "admin@REALM.COM",
+	$suffix         = "dc=example,dc=com",
+	$ldapservers    = "myldapserver.dnsdomain.com",
+    $sudobindpw     = "eituyuiijjfdhfvjliooiutgy678",
+	$is_ipa_server  = "no"
+){
+    package {
+        "ipa-client":
+            ensure => present;
+        "openldap-clients":
+            ensure => present;
+        "krb5-workstation":
+            ensure => present;
+        "cyrus-sasl-gssapi":
+            ensure => present;
+        "sssd":
+            ensure => present;
+        "sssd-dbus":
+            ensure => $lsbmajdistrelease ? {
+                "5"     => absent,
+                default => present,
+            };
+        "sudo":
+            ensure => present;
+    }
+    file { 
+	    "/etc/nss_ldap.conf":
+		    content => template('directorio/nss_ldap.conf.erb');
+	    "/etc/ldap.conf":
+		    ensure  => "/etc/nss_ldap.conf",
+		    require => File["/etc/nss_ldap.conf"];
+	    "/etc/openldap/ldap.conf":
+		    content => template('directorio/ldap.conf.erb'),
+	        require => Package["openldap-clients"];
+        "/etc/krb5.conf":
+	        content => template('directorio/krb5.conf.erb'),
+	        require => Package["krb5-workstation"];
+        "/etc/sssd/sssd.conf":
+	        content => template('directorio/sssd.conf.erb'),
+	        owner   => "root",
+	        group   => "root",
+	        mode    => "0600",
+	        require => [ Package["sssd"], Package["sssd-dbus"] ];
+        "/etc/nsswitch.conf":
+	        content => template('directorio/nsswitch.conf.erb'),
+	        require => Package["ipa-client"];
+        "/root/.k5login":
+	        mode    => "0600",
+	        seltype => "krb5_home_t",
+	        seluser => "unconfined_u",
+	        require => K5login["/root/.k5login"];
+    }
+	k5login {
+	    "/root/.k5login":
+	    	mode       => "600",
+	    	principals => [ $k5loginusers ];
+	}
+	service { 
+        "sssd":
+		    enable    => true,
+		    ensure    => running,
+		    require   => File["/etc/sssd/sssd.conf"],
+		    subscribe => File["/etc/sssd/sssd.conf"];
+	}
 }

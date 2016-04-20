@@ -11,22 +11,22 @@
 ##
 #####################################################################
 
-base <%= @suffix %>
-uri <% @ldapservers.each do |val| -%> ldap://<%= val %>:389/ <% end -%>
+base <%= scope.lookupvar('ipaclient::suffix') %>
+uri <% scope.lookupvar('ipaclient::ldapservers').each do |val| -%> ldap://<%= val %>:389/ <% end -%>
 
 ldap_version 3
 
-nss_base_passwd cn=accounts,<%= @suffix %>?sub
-nss_base_group cn=groups,cn=accounts,<%= @suffix %>?sub
+nss_base_passwd cn=accounts,<%= scope.lookupvar('ipaclient::suffix') %>?sub
+nss_base_group cn=groups,cn=accounts,<%= scope.lookupvar('ipaclient::suffix') %>?sub
 nss_schema rfc2307bis
 nss_map_attribute uniqueMember member
 nss_initgroups_ignoreusers root,ldap,dirsrv,named,avahi,haldaemon
 nss_reconnect_maxsleeptime 2
 nss_reconnect_sleeptime 1
 
-sudoers_base ou=SUDOers,<%= @suffix %>
-binddn uid=sudo,cn=sysaccounts,cn=etc,<%= @suffix %>
-bindpw <%= @sudobindpw %>
+sudoers_base ou=SUDOers,<%= scope.lookupvar('ipaclient::suffix') %>
+binddn uid=sudo,cn=sysaccounts,cn=etc,<%= scope.lookupvar('ipaclient::suffix') %>
+bindpw <%= scope.lookupvar('ipaclient::sudobindpw') %>
 
 cacertfile /etc/ipa/ca.crt
 
