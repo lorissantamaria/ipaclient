@@ -1,7 +1,7 @@
 require 'spec_helper'
-describe 'freeipaclient' do
+describe 'ipaclient' do
 
   context 'with defaults for all parameters' do
-    it { should contain_class('freeipaclient') }
+    it { should contain_class('ipaclient') }
   end
 end
